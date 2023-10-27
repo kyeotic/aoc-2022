@@ -1,0 +1,11 @@
+use aoc::{get_input, report};
+use itertools::Itertools;
+
+fn main() {
+    let input = get_input(__DAY__);
+
+    let a = 1;
+    let b = 2;
+
+    report(a, b);
+}
