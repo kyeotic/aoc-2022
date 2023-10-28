@@ -7,6 +7,6 @@ pub fn get_input(day: &str) -> String {
     fs::read_to_string(filepath).unwrap()
 }
 
-pub fn report<T: std::fmt::Display, K: std::fmt::Display>(a: T, b: K) {
+pub fn report<T: std::fmt::Display, K: std::fmt::Display>(a: &T, b: &K) {
     println!("A:\t{}\nB:\t{}", a, b);
 }

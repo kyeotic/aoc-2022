@@ -144,5 +144,5 @@ fn main() {
         .map(|r| r.score)
         .sum();
 
-    report(a, b);
+    report(&a, &b);
 }

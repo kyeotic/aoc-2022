@@ -1,44 +1,29 @@
 #![allow(dead_code, unused_imports)]
 use aoc::{get_input, report};
 use itertools::Itertools;
-use lazy_static::lazy_static;
-use std::{collections::BTreeMap, ops::Index};
-
-lazy_static! {
-    static ref MAP: BTreeMap<char, i32> = {
-        let mut map: BTreeMap<char, i32> = BTreeMap::new();
-
-        for (i, x) in ('a'..='z').enumerate() {
-            map.insert(x, i as i32 + 1);
-        }
-
-        for (i, x) in ('A'..='Z').enumerate() {
-            map.insert(x, i as i32 + 27);
-        }
-
-        map
-    };
-}
 
 fn main() {
     let input = get_input("03");
     let lines = input.lines();
 
-    let a: i32 = lines
+    let a: usize = lines
         .clone()
         .map(|line| find_overlap(bifurcate(line)))
-        .map(|c| get_priority(&c))
+        .map(|c| value(c))
         .sum();
 
-    let b: i32 = lines
+    let b: usize = lines
         .clone()
         .chunks(3)
         .into_iter()
         .map(find_overlap)
-        .map(|c| get_priority(&c))
+        .map(|c| value(c))
         .sum();
 
-    report(a, b);
+    report(&a, &b);
+
+    assert_eq!(a, 8240);
+    assert_eq!(b, 2587);
 }
 
 fn bifurcate(line: &str) -> [&str; 2] {
@@ -58,6 +43,10 @@ fn find_overlap<'a>(vals: impl IntoIterator<Item = &'a str>) -> char {
     overlap.unwrap().chars().next().unwrap()
 }
 
-fn get_priority(c: &char) -> i32 {
-    *MAP.get(&c).unwrap()
+fn value(c: char) -> usize {
+    match c {
+        'a'..='z' => c as usize - b'a' as usize + 1,
+        'A'..='Z' => c as usize - b'A' as usize + 27,
+        _ => unreachable!(),
+    }
 }

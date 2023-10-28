@@ -9,4 +9,8 @@ fn main() {
     let b = 2;
 
     report(a, b);
+
+    // uncomment once you have correct to support refactoring
+    // assert_eq!(a, 1);
+    // assert_eq!(b, 2);
 }
