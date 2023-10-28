@@ -1,8 +1,7 @@
 use aoc::{get_input, report};
 
 // I went a little nuts on this one writing a "perfect" program
-// And when part two fucked up the middle I went for the simplest refactor
-// note to self: boil the program more before starting
+// And when part two fucked up the middle I went for a dirty bolt-on job
 
 #[derive(Debug)]
 enum RpsMove {
