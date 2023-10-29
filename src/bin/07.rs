@@ -7,7 +7,7 @@ use std::{cell::RefCell, collections::HashMap, env::join_paths, rc::Rc};
 // I again chose to build this like a real program instead of code-golfing it
 // It was difficult, but it forced me to contend with borrow-checker and lifetimes for the first time
 // Ultimately it was Rc + RefCell that allowed this design to work
-// see: https://discord.com/channels/@me/175660711207370753/1168274873580277884
+// see: https://doc.rust-lang.org/std/cell/index.html#introducing-mutability-inside-of-something-immutable
 
 #[derive(Debug)]
 struct Dir {
