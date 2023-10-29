@@ -1,7 +1,7 @@
 #![allow(dead_code, unused_imports)]
 use aoc::{get_input, report};
 use itertools::Itertools;
-use std::collections::HashMap;
+use std::{collections::HashMap, env::join_paths};
 
 // Since this puzzle could use a state machine, and I'm doing this to learn rust not learn algos
 // I again chose to build this like a real program instead of code-golfing it
@@ -10,14 +10,16 @@ use std::collections::HashMap;
 #[derive(Debug)]
 struct Dir<'a> {
     name: String,
+    path: String,
     files: HashMap<String, File>,
     dirs: HashMap<String, &'a Dir<'a>>,
 }
 
 impl<'a> Dir<'a> {
-    fn new(name: String) -> Self {
+    fn new(name: String, parent_path: &str) -> Self {
         Self {
-            name: name,
+            path: [parent_path, &name.clone()].join("/").to_owned(),
+            name,
             files: HashMap::new(),
             dirs: HashMap::new(),
         }
@@ -84,9 +86,9 @@ struct FileSystem<'a> {
 // So it lives in this struct, which keeps them in an easily-accessible hash-map
 impl<'a> FileSystem<'a> {
     fn new() -> Self {
-        let root = Dir::new("/".to_owned());
+        let root = Dir::new("/".to_owned(), "");
         let mut dirs = HashMap::new();
-        dirs.insert(root.name.to_owned(), root);
+        dirs.insert(root.path.to_owned(), root);
         Self { dirs }
     }
 
@@ -94,10 +96,14 @@ impl<'a> FileSystem<'a> {
         self.dirs.get("/").unwrap()
     }
 
+    fn get_dir(&mut self, path: &str) -> &mut Dir<'a> {
+        self.dirs.get_mut(path).unwrap()
+    }
+
     fn create_dir(&mut self, parent: &'a mut Dir<'a>, dir_name: String) -> &'a Dir {
-        let dir: Dir<'a> = Dir::new(dir_name.to_owned());
-        self.dirs.insert(dir_name.to_owned(), dir);
-        let dir_out = &self.dirs.get(dir_name.as_str()).unwrap();
+        let dir: Dir<'a> = Dir::new(dir_name.to_owned(), &parent.path);
+        self.dirs.insert(dir.path.to_owned(), dir);
+        let dir_out = self.dirs.get(dir_name.as_str()).unwrap();
         parent.add_dir(&dir_out);
         &dir_out
     }
@@ -114,7 +120,7 @@ fn main() {
     //          move_up =>
 
     let mut fs = FileSystem::new();
-    let mut dir_stack = vec![fs.get_root()];
+    let mut dir_stack = vec![fs.get_root().path.clone()];
 
     for line in input.lines() {
         let line_read = LineRead::parse(line);
@@ -123,18 +129,19 @@ fn main() {
             LineRead::MoveUp => {
                 let _ = dir_stack.pop();
             }
-            LineRead::MoveInto(dir) => {
-                let parent = &mut dir_stack.last().unwrap();
-                let dir = fs.create_dir(parent, dir);
-                dir_stack.push(dir);
+            LineRead::MoveInto(dir_name) => {
+                let parent_path = dir_stack.last().unwrap();
+                let parent = fs.get_dir(parent_path);
+                let dir = fs.create_dir(parent, dir_name);
+                dir_stack.push(dir.path.clone());
             }
             LineRead::MoveRoot => {
                 dir_stack.clear();
-                dir_stack.push(fs.get_root());
+                dir_stack.push(fs.get_root().path.clone());
             }
             LineRead::NoOp => (),
             LineRead::File(file) => {
-                let cd = &mut dir_stack.last().unwrap();
+                let cd = &mut fs.get_dir(dir_stack.last().unwrap());
                 cd.add_file(file);
             }
         }
