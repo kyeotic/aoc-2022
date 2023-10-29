@@ -6,6 +6,8 @@ use std::{cell::RefCell, collections::HashMap, env::join_paths, rc::Rc};
 // Since this puzzle could use a state machine, and I'm doing this to learn rust not learn algos
 // I again chose to build this like a real program instead of code-golfing it
 // It was difficult, but it forced me to contend with borrow-checker and lifetimes for the first time
+// Ultimately it was Rc + RefCell that allowed this design to work
+// see: https://discord.com/channels/@me/175660711207370753/1168274873580277884
 
 #[derive(Debug)]
 struct Dir {
@@ -89,10 +91,6 @@ struct FileSystem {
     dirs: RefCell<HashMap<String, Rc<Dir>>>,
 }
 
-// Ownership for the directories must live somewhere accessible by the line-reader
-// If it lived in main() using a Vec we would lose dirs when moving to root
-// If it lived in the chain of dirs it would require walking the tree to get mut refs
-// So it lives in this struct, which keeps them in an easily-accessible hash-map
 impl FileSystem {
     fn new() -> Self {
         let root = Rc::new(Dir::new("/".to_owned(), None));
@@ -121,17 +119,10 @@ impl FileSystem {
     fn dirs_vec(&self) -> Vec<Rc<Dir>> {
         self.dirs.borrow().values().map(|d| d.clone()).collect()
     }
-
-    // fn create_file(&mut self, )
 }
 
 fn main() {
     let input = get_input("07");
-
-    // for each line
-    //      parse into type
-    //      match
-    //          move_up =>
 
     let fs = FileSystem::new();
     let mut dir_stack = vec![fs.get_root().path.clone()];
@@ -194,6 +185,6 @@ fn main() {
     report(&a, &b);
 
     // uncomment once you have correct to support refactoring
-    // assert_eq!(a, 1);
-    // assert_eq!(b, 2);
+    assert_eq!(a, 1141028);
+    assert_eq!(b, 8278005);
 }
