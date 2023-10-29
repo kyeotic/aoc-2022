@@ -76,7 +76,6 @@ impl LineRead {
 #[derive(Debug)]
 struct FileSystem<'a> {
     dirs: HashMap<String, Dir<'a>>,
-    stack: Vec<&'a Dir<'a>>,
 }
 
 // Ownership for the directories must live somewhere accessible by the line-reader
@@ -88,38 +87,22 @@ impl<'a> FileSystem<'a> {
         let root = Dir::new("/".to_owned());
         let mut dirs = HashMap::new();
         dirs.insert(root.name.to_owned(), root);
-        Self {
-            dirs,
-            stack: Vec::new(),
-        }
+        Self { dirs }
     }
 
-    fn move_to_root(&mut self) {
-        let root = self.stack[0];
-        self.stack.clear();
-        self.stack.push(root);
+    fn get_root(&self) -> &'a Dir {
+        self.dirs.get("/").unwrap()
     }
 
-    fn get_current_dir(&mut self) -> &'a mut Dir {
-        let cd_name = self.stack.last().unwrap().name.as_str();
-        &mut self.dirs.get_mut(cd_name).unwrap()
-    }
-
-    fn create_dir(&mut self, dir_name: String) -> &'a Dir {
-        let dir: Dir<'a> = Dir::new(dir_name);
-        self.get_current_dir().add_dir(&dir);
+    fn create_dir(&mut self, parent: &'a mut Dir<'a>, dir_name: String) -> &'a Dir {
+        let dir: Dir<'a> = Dir::new(dir_name.to_owned());
         self.dirs.insert(dir_name.to_owned(), dir);
-        &dir
+        let dir_out = &self.dirs.get(dir_name.as_str()).unwrap();
+        parent.add_dir(&dir_out);
+        &dir_out
     }
 
-    fn move_into(&mut self, dir_name: &str) {
-        let dir = self.dirs.get(dir_name).unwrap();
-        self.stack.push(&dir);
-    }
-
-    fn move_up()
-
-    // fn g
+    // fn create_file(&mut self, )
 }
 
 fn main() {
@@ -131,24 +114,28 @@ fn main() {
     //          move_up =>
 
     let mut fs = FileSystem::new();
+    let mut dir_stack = vec![fs.get_root()];
 
     for line in input.lines() {
         let line_read = LineRead::parse(line);
 
         match line_read {
             LineRead::MoveUp => {
-                let _ = fs.stack.pop();
+                let _ = dir_stack.pop();
             }
             LineRead::MoveInto(dir) => {
-                let dir = fs.create_dir(dir);
-                fs.move_into(&dir.name);
+                let parent = &mut dir_stack.last().unwrap();
+                let dir = fs.create_dir(parent, dir);
+                dir_stack.push(dir);
             }
             LineRead::MoveRoot => {
-                fs.move_to_root();
+                dir_stack.clear();
+                dir_stack.push(fs.get_root());
             }
             LineRead::NoOp => (),
             LineRead::File(file) => {
-                fs.get_current_dir().add_file(file);
+                let cd = &mut dir_stack.last().unwrap();
+                cd.add_file(file);
             }
         }
     }
