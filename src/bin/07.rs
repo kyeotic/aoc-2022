@@ -100,11 +100,12 @@ impl FileSystem {
     }
 
     fn get_root(&self) -> Rc<Dir> {
+        // Root will always be here, unwrap is safe
         self.dirs.borrow().get("/").unwrap().clone()
     }
 
-    fn get_dir(&self, path: &str) -> Rc<Dir> {
-        self.dirs.borrow_mut().get(path).unwrap().clone()
+    fn get_dir(&self, path: &str) -> Option<Rc<Dir>> {
+        Some(self.dirs.borrow_mut().get(path)?.clone())
     }
 
     fn create_dir(&self, parent: Rc<Dir>, dir_name: String) -> Rc<Dir> {
@@ -136,7 +137,8 @@ fn main() {
             }
             LineRead::MoveInto(dir_name) => {
                 let parent_path = dir_stack.last().unwrap();
-                let parent = fs.get_dir(parent_path);
+                // parent must exist, we are currently in it
+                let parent = fs.get_dir(parent_path).unwrap();
                 let dir = fs.create_dir(parent, dir_name);
                 dir_stack.push(dir.path.clone());
             }
@@ -146,7 +148,8 @@ fn main() {
             }
             LineRead::NoOp => (),
             LineRead::File(file) => {
-                let cd = &mut fs.get_dir(dir_stack.last().unwrap());
+                // parent must exist, we are currently in it
+                let cd = &mut fs.get_dir(dir_stack.last().unwrap()).unwrap();
                 cd.add_file(file);
             }
         }
